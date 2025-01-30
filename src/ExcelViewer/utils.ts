@@ -49,10 +49,7 @@ export function fillMissingCells(cells: Cell[]): Cell[][] {
   return Object.values(filledCells) as Cell[][];
 }
 
-export function indexToReference(
-  rowIndex: number,
-  colIndex: number
-): string {
+export function indexToReference(rowIndex: number, colIndex: number): string {
   return String.fromCharCode(65 + colIndex) + (rowIndex + 1);
 }
 

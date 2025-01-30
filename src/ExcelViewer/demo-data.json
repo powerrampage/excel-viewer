@@ -42,7 +42,7 @@
           "backgroundColor": "none",
           "textColor": "#0070c0",
           "border": "noBorder",
-          "formula": "=B2+B3",
+          "formula": "=C3+C4",
           "width": 10.21875,
           "height": 13.199999809265137,
           "bold": true,

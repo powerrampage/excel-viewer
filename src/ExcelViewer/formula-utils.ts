@@ -1,7 +1,8 @@
+import { CellKey, CellValue } from "./store";
 import { isFormula } from "./utils";
 
 export function extractDependencies(formula: string): string[] {
-  if(!isFormula(formula)) return [];
+  if (!isFormula(formula)) return [];
 
   const regex = /[A-Z]+\d+(:[A-Z]+\d+)?/g;
   const matches = formula.match(regex) || [];
@@ -15,7 +16,7 @@ export function extractDependencies(formula: string): string[] {
         start.replace(/\d+/g, ""),
         Number(start.replace(/\D+/g, "")),
       ];
-      const [endCol, endRow] = [
+      const [_endCol, endRow] = [
         end.replace(/\d+/g, ""),
         Number(end.replace(/\D+/g, "")),
       ];
@@ -29,4 +30,22 @@ export function extractDependencies(formula: string): string[] {
   });
 
   return expanded;
+}
+
+// ⚠️ Todo: Use library to implement math formula
+export function evaluateFormula(
+  formula: string,
+  cells: Record<CellKey, CellValue>
+) {
+  let expression = formula.slice(1);
+  for (const ref of extractDependencies(formula)) {
+    const value = cells[ref]?.value ?? "0";
+    expression = expression.replace(ref, value);
+  }
+
+  try {
+    return eval(expression);
+  } catch {
+    return "ERROR";
+  }
 }

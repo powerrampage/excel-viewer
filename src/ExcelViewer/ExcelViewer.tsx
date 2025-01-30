@@ -8,8 +8,8 @@ import { CellStore, useCellStore } from "./store";
 const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData }) => {
   const [data, _setData] = useState(jsonData);
   const [listIndex, setListIndex] = useState(0);
-  const dispatchCells = useCellStore((state) => state.setAllCells);
-
+  const setAllCells = useCellStore((state) => state.setAllCells);
+  const setDependencies = useCellStore((state) => state.setDependencies);
   const currentSheet = data.packages[listIndex];
 
   useEffect(() => {
@@ -21,8 +21,9 @@ const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData }) => {
       },
       {} as CellStore["cells"]
     );
-    dispatchCells(cells);
-  }, [currentSheet, dispatchCells]);
+    setAllCells(cells);
+    setDependencies(cells);
+  }, [currentSheet, setAllCells, setDependencies]);
 
   return (
     <div>
@@ -49,7 +50,6 @@ const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData }) => {
             borderCollapse: "collapse",
             tableLayout: "fixed",
             width: "100%",
-            background: "rgb(159 255 171)", // Todo: remove color
           }}
         >
           <tbody>
