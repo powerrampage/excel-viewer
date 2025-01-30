@@ -77,7 +77,7 @@ const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData }) => {
   );
 };
 
-const demoJsonData: Root = demoJson;
+const demoJsonData: any = demoJson;
 
 export default function Excel() {
   return <ExcelViewer jsonData={demoJsonData} />;

@@ -11,9 +11,9 @@ export interface Cell {
   rowIndex: number;
   columnIndex: number;
   value: string;
-  fontName: string;
+  fontName: string | null;
   fontSize: number;
-  backgroundColor: string;
+  backgroundColor: string | null;
   textColor: string;
   border: ("noBorder" | "allSides") | ({} & string);
   formula?: string | null;

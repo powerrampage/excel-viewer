@@ -24,6 +24,7 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellRef }) => {
   };
 
   const onHandleCell = (value: string) => {
+    // Todo: Impement Range formula calucation and if formula doesn't change, we shouldn't dispatch state
     if (isFormula(value)) {
       setCellFormula(cellRef, {
         value: state.value,
