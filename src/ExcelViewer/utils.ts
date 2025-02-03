@@ -1,5 +1,6 @@
 import { CSSProperties } from "react";
-import { Cell } from "./types";
+import { Cell, Package } from "./types";
+import { DependencyValue, SpreadsheetStore } from "./store";
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
@@ -22,31 +23,29 @@ export function getCellStyles(cell: Cell): CSSProperties {
   };
 }
 
-export function fillMissingCells(cells: Cell[]): Cell[][] {
-  const maxRowIndex = Math.max(...cells.map((cell) => cell.rowIndex));
-  const maxColIndex = Math.max(...cells.map((cell) => cell.columnIndex));
+export function groupCells(cells: Cell[]): Cell[][] {
+  return cells.reduce((prev: Cell[][], cell) => {
+    prev[cell.rowIndex] ||= [];
+    prev[cell.rowIndex].push(cell);
+    return prev;
+  }, []);
+}
 
-  const cellMap = new Map(
-    cells.map((cell) => [`${cell.rowIndex}-${cell.columnIndex}`, cell])
-  );
+export function spreadsheetMapper(data: Package[]) {
+  const spreadsheet = data.reduce((prev, { listName, cells }) => {
+    const cellMap = cells.reduce(
+      (prev, { formula, value, rowIndex, columnIndex }) => {
+        const cellKey = indexToReference(rowIndex, columnIndex);
+        prev[cellKey] = { formula, value };
+        return prev;
+      },
+      {} as SpreadsheetStore["cells"][string]
+    );
+    prev[listName] = cellMap;
 
-  const filledCells: Record<number, Partial<Cell>[]> = {};
-
-  for (let row = 0; row <= maxRowIndex; row++) {
-    for (let col = 0; col <= maxColIndex; col++) {
-      const key = `${row}-${col}`;
-      filledCells[row] ||= [];
-
-      if (cellMap.has(key)) {
-        const cell = cellMap.get(key)!;
-        filledCells[row].push(cell);
-      } else {
-        filledCells[row].push({ rowIndex: row, columnIndex: col, value: "" });
-      }
-    }
-  }
-
-  return Object.values(filledCells) as Cell[][];
+    return prev;
+  }, {} as SpreadsheetStore["cells"]);
+  return spreadsheet;
 }
 
 export function indexToReference(rowIndex: number, colIndex: number): string {
@@ -56,4 +55,80 @@ export function indexToReference(rowIndex: number, colIndex: number): string {
 export function isFormula(value: string | null | undefined): boolean {
   if (!value) return false;
   return value.startsWith("=");
+}
+
+export function parseInt(value: string | null | undefined) {
+  if (!isFinite(value as any) || typeof value !== "number") {
+    return Number(value);
+  }
+  return value;
+}
+
+export function extractVariables(formula: string): string[] {
+  const regex = /[A-Z]+\d+(:[A-Z]+\d+)?/g;
+  const matches = formula.match(regex) || [];
+
+  let expanded: string[] = [];
+
+  matches.forEach((match) => {
+    if (match.includes(":")) {
+      const [start, end] = match.split(":");
+      const [startCol, startRow] = [
+        start.replace(/\d+/g, ""),
+        Number(start.replace(/\D+/g, "")),
+      ];
+      const [_endCol, endRow] = [
+        end.replace(/\d+/g, ""),
+        Number(end.replace(/\D+/g, "")),
+      ];
+
+      for (let i = startRow; i <= endRow; i++) {
+        expanded.push(`${startCol}${i}`);
+      }
+    } else {
+      expanded.push(match);
+    }
+  });
+
+  return expanded;
+}
+
+export function expandRange(range: string): string[] {
+  const match = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+  if (!match) return [range];
+
+  const [, startCol, startRow, endCol, endRow] = match;
+  const startColCode = startCol.charCodeAt(0);
+  const endColCode = endCol.charCodeAt(0);
+
+  const dependencies: string[] = [];
+
+  for (let col = startColCode; col <= endColCode; col++) {
+    for (let row = Number(startRow); row <= Number(endRow); row++) {
+      dependencies.push(String.fromCharCode(col) + row);
+    }
+  }
+
+  return dependencies;
+}
+
+export function extractDependencies(formula: string, currentSheetKey: string): DependencyValue[] {
+  const regex = /([A-Za-z0-9_]+!)?\$?([A-Z]+\d+(:[A-Z]+\d+)*)/g;
+  const dependencies: DependencyValue[] = [];
+
+  let match;
+  while ((match = regex.exec(formula)) !== null) {
+    const sheetKey = match[1] ? match[1].slice(0, -1) : currentSheetKey;
+    const ref = match[2];
+
+    if (ref.includes(":")) {
+      // (e.g., "A1:A3" → ["A1", "A2", "A3"])
+      const rangeRefs = expandRange(ref);
+      dependencies.push(...rangeRefs.map((cellKey) => ({ sheetKey, cellKey })));
+    } else {
+      dependencies.push({ sheetKey, cellKey: ref });
+    }
+  }
+
+  return dependencies;
 }

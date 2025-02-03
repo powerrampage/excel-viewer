@@ -1,51 +1,43 @@
-import { CellKey, CellValue } from "./store";
-import { isFormula } from "./utils";
+import { SheetKey, SpreadsheetStoreState } from "./store";
+import { Parser as FormulaParser } from "hot-formula-parser";
+import { extractVariables, parseInt } from "./utils";
 
-export function extractDependencies(formula: string): string[] {
-  if (!isFormula(formula)) return [];
+const formulaParser = new FormulaParser();
+let data: SpreadsheetStoreState["cells"] = {};
+let currentSheetKey: SheetKey;
 
-  const regex = /[A-Z]+\d+(:[A-Z]+\d+)?/g;
-  const matches = formula.match(regex) || [];
+formulaParser.on("callCellValue", ({ label }, done) => {
+  const cellKey = data[currentSheetKey][label];
+  console.log("callCellValue:", cellKey.value);
+  done(cellKey.value);
+});
+formulaParser.on("callRangeValue", (startCellCoord, endCellCoord, done) => {
+  const rangeKey = `${startCellCoord.label}:${endCellCoord.label}`;
+  const variables = extractVariables(rangeKey);
+  const rangeValues = variables
+    .map((variable) => parseInt(data[currentSheetKey][variable].value))
+    .filter(Boolean);
 
-  let expanded: string[] = [];
+  console.log("callRangeValue:", rangeValues);
+  done(rangeValues);
+});
 
-  matches.forEach((match) => {
-    if (match.includes(":")) {
-      const [start, end] = match.split(":");
-      const [startCol, startRow] = [
-        start.replace(/\d+/g, ""),
-        Number(start.replace(/\D+/g, "")),
-      ];
-      const [_endCol, endRow] = [
-        end.replace(/\d+/g, ""),
-        Number(end.replace(/\D+/g, "")),
-      ];
-
-      for (let i = startRow; i <= endRow; i++) {
-        expanded.push(`${startCol}${i}`);
-      }
-    } else {
-      expanded.push(match);
-    }
-  });
-
-  return expanded;
-}
-
-// ⚠️ Todo: Use library to implement math formula
 export function evaluateFormula(
   formula: string,
-  cells: Record<CellKey, CellValue>
+  sheetKey: SheetKey,
+  cells: SpreadsheetStoreState["cells"]
 ) {
-  let expression = formula.slice(1);
-  for (const ref of extractDependencies(formula)) {
-    const value = cells[ref]?.value ?? "0";
-    expression = expression.replace(ref, value);
-  }
+  currentSheetKey = sheetKey;
+  data = cells; // IDK other approach
 
-  try {
-    return eval(expression);
-  } catch {
-    return "ERROR";
+  let expression = formula.slice(1);
+  const { result, error } = formulaParser.parse(expression);
+
+  console.log({ result, error });
+
+  if (error === null) {
+    return String(result);
+  } else {
+    return error;
   }
 }

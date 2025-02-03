@@ -1,22 +1,28 @@
-import { FC, useState } from "react";
+import { FC, memo, useState } from "react";
 import { Cell } from "./types";
 import { getCellStyles, isFormula } from "./utils";
-import { CellValue, useCellStore } from "./store";
+import { CellValue, useSpreadsheetStore } from "./store";
+import deepEqual from "deep-equal";
 
 export interface CellBoxProps {
   cell: Cell;
-  cellRef: string;
+  cellKey: string;
+  sheetKey: string;
 }
 
 const equalityFn = (a: CellValue, b: CellValue) => {
   return a?.formula === b?.formula && a?.value === b?.value;
+  // return Object.is(a?.formula, b?.formula) && Object.is(a?.value, b?.value);
 };
 
-const CellBox: FC<CellBoxProps> = ({ cell, cellRef }) => {
+const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
   const [isEdit, setIsEdit] = useState(false);
-  const stateCell = useCellStore((state) => state.cells?.[cellRef], equalityFn);
-  const setCell = useCellStore((state) => state.setCell);
-  const setCellFormula = useCellStore((state) => state.setCellFormula);
+  const setCellValue = useSpreadsheetStore((state) => state.setCellValue);
+  const setCellFormula = useSpreadsheetStore((state) => state.setCellFormula);
+  const stateCell = useSpreadsheetStore(
+    (state) => state.cells?.[sheetKey]?.[cellKey],
+    equalityFn
+  );
 
   const state = stateCell ?? {
     formula: cell.formula,
@@ -24,21 +30,22 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellRef }) => {
   };
 
   const onHandleCell = (value: string) => {
-    // Todo: Impement Range formula calucation and if formula doesn't change, we shouldn't dispatch state
     if (isFormula(value)) {
-      setCellFormula(cellRef, {
+      setCellFormula(sheetKey, cellKey, {
         value: state.value,
         formula: value,
       });
     } else {
-      setCell(cellRef, { value, formula: null });
+      setCellValue(sheetKey, cellKey, { value, formula: null });
     }
     setIsEdit(false);
   };
 
+  console.log(sheetKey, cellKey, "re-render");
+
   return (
     <td
-      data-ref={cellRef}
+      data-ref={cellKey}
       data-cell={JSON.stringify(cell)}
       contentEditable
       suppressContentEditableWarning
@@ -54,9 +61,9 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellRef }) => {
   );
 };
 
-export default CellBox;
+// export default CellBox;
 
 // Todo: If parent re-renders
-// export default memo(CellBox, (prevProps, nextProps) => {
-//   return deepEqual(prevProps, nextProps);
-// });
+export default memo(CellBox, (prevProps, nextProps) => {
+  return deepEqual(prevProps, nextProps);
+});
