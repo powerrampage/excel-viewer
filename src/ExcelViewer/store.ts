@@ -1,11 +1,17 @@
-import { createWithEqualityFn as create } from "zustand/traditional";
-import { evaluateFormula } from "./formula-utils";
-import { Cell } from "./types";
-import { extractDependencies, isFormula } from "./utils";
 import _ from "lodash";
+import { createWithEqualityFn as create } from "zustand/traditional";
+import { Cell } from "./types";
+import { hfService } from "./lib/hyperformula";
+import {
+  extractDependencies,
+  indexToReference,
+  isFormula,
+  parseCellKey,
+} from "./utils";
 
 export type SheetKey = string;
-export type CellKey = string;
+export type CellKey = string; // "4-5" (row: 4, col: 5)
+export type CellCoord = { row: number; col: number };
 export type CellValue = Pick<Cell, "value" | "formula">;
 export type DependencyValue = { sheetKey: SheetKey; cellKey: CellKey };
 
@@ -33,80 +39,93 @@ export interface SpreadsheetStoreActions {
 
 export type SpreadsheetStore = SpreadsheetStoreState & SpreadsheetStoreActions;
 
-export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => ({
-  currentSheetKey: null,
-  cells: {},
-  dependencies: {},
+export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
+  return {
+    currentSheetKey: null,
+    cells: {},
+    dependencies: {},
 
-  setCurrentSheetKey(sheetKey) {
-    set(() => {
-      return { currentSheetKey: sheetKey };
-    });
-  },
-  setCellValue(sheetKey, cellKey, cellValue) {
-    set((state) => {
-      const newCells = _.cloneDeep(state.cells);
-      _.set(newCells, [sheetKey, cellKey], cellValue);
+    setCurrentSheetKey(sheetKey) {
+      set(() => ({ currentSheetKey: sheetKey }));
+    },
+    setCellValue(sheetKey, cellKey, cellValue) {
+      set((state) => {
+        const cells = structuredClone(state.cells);
+        _.set(cells, [sheetKey, cellKey], cellValue);
 
-      const dependencies = _.get(state.dependencies, [sheetKey, cellKey], []);
+        hfService.setCellContents(sheetKey, cellKey, cellValue.value);
 
-      if (dependencies.length) {
+        const dependencies = _.get(state.dependencies, [sheetKey, cellKey], []);
         dependencies.forEach(({ sheetKey, cellKey }) => {
-          const cell = _.get(newCells, [sheetKey, cellKey]);
-          if (cell) {
-            _.set(
-              newCells,
-              [sheetKey, cellKey, "value"],
-              evaluateFormula(cell.formula!, sheetKey, newCells)
-            );
-          }
-        });
-      }
+          const formula = _.get(cells, [sheetKey, cellKey, "formula"])!;
+          const value = hfService.calcFormula(formula, sheetKey);
+          _.set(cells, [sheetKey, cellKey, "value"], value);
 
-      return { cells: newCells };
-    });
-  },
-  setCellFormula(sheetKey, cellKey, cellValue) {
-    set((state) => {
-      const cells = state.cells;
-
-      cells[sheetKey][cellKey] = {
-        value: evaluateFormula(cellValue.formula!, sheetKey, state.cells),
-        formula: cellValue.formula,
-      };
-
-      get().setDependencies(cells);
-
-      return { cells };
-    });
-  },
-  setSpreadsheet(cells) {
-    set(() => {
-      return { cells };
-    });
-  },
-  setDependencies(spreadsheet) {
-    set(() => {
-      const dependencies: SpreadsheetStore["dependencies"] = {};
-      const currentSheetKey = get().currentSheetKey!;
-
-      Object.entries(spreadsheet).forEach(([sheetKey, cells]) => {
-        Object.entries(cells).forEach(([cellKey, cellValue]) => {
-          if (!isFormula(cellValue.formula)) return;
-
-          extractDependencies(cellValue.formula!, currentSheetKey).forEach(
-            (dependency) => {
-              _.update(
-                dependencies,
-                `${dependency.sheetKey}.${dependency.cellKey}`,
-                (refs = []) => [...refs, { sheetKey, cellKey }]
-              );
-            }
+          console.log(
+            "Updated dependency:",
+            sheetKey,
+            indexToReference(
+              parseCellKey(cellKey).row,
+              parseCellKey(cellKey).col
+            ),
+            cellKey,
+            value
           );
         });
-      });
 
-      return { dependencies };
-    });
-  },
-}));
+        return { cells };
+      });
+    },
+    // Todo: fix cell formula
+    setCellFormula(sheetKey, cellKey, cellValue) {
+      set((state) => {
+        hfService.setCellContents(sheetKey, cellKey, cellValue.formula);
+        const { row, col } = parseCellKey(cellKey);
+
+        const sheetId = hfService.getSheetId(sheetKey);
+        console.log("asda", hf.getCellValue({ sheet: sheetId, row, col }));
+
+        const updatedCells = structuredClone(state.cells);
+
+        return { cells: updatedCells };
+      });
+    },
+    setSpreadsheet(cells) {
+      set(() => {
+        const updatedCells = structuredClone(cells);
+
+        Object.entries(updatedCells).forEach(([sheetKey, sheetCells]) => {
+          Object.entries(sheetCells).forEach(([cellKey, cellValue]) => {
+            hfService.setCellContents(sheetKey, cellKey, cellValue.value);
+          });
+        });
+
+        return { cells: updatedCells };
+      });
+    },
+    setDependencies(spreadsheet) {
+      set(() => {
+        const dependencies: SpreadsheetStore["dependencies"] = {};
+        const currentSheetKey = get().currentSheetKey!;
+
+        Object.entries(spreadsheet).forEach(([sheetKey, cells]) => {
+          Object.entries(cells).forEach(([cellKey, cellValue]) => {
+            if (!isFormula(cellValue.formula)) return;
+
+            extractDependencies(cellValue.formula!, currentSheetKey).forEach(
+              (dependency) => {
+                _.update(
+                  dependencies,
+                  [dependency.sheetKey, dependency.cellKey],
+                  (refs = []) => [...refs, { sheetKey, cellKey }]
+                );
+              }
+            );
+          });
+        });
+
+        return { dependencies };
+      });
+    },
+  };
+});

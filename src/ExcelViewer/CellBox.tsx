@@ -1,18 +1,17 @@
 import { FC, memo, useState } from "react";
 import { Cell } from "./types";
-import { getCellStyles, isFormula } from "./utils";
-import { CellValue, useSpreadsheetStore } from "./store";
+import { getCellStyles, indexToReference, isFormula } from "./utils";
+import { CellKey, CellValue, SheetKey, useSpreadsheetStore } from "./store";
 import deepEqual from "deep-equal";
 
 export interface CellBoxProps {
   cell: Cell;
-  cellKey: string;
-  sheetKey: string;
+  cellKey: CellKey;
+  sheetKey: SheetKey;
 }
 
 const equalityFn = (a: CellValue, b: CellValue) => {
-  return a?.formula === b?.formula && a?.value === b?.value;
-  // return Object.is(a?.formula, b?.formula) && Object.is(a?.value, b?.value);
+  return Object.is(a?.formula, b?.formula) && Object.is(a?.value, b?.value);
 };
 
 const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
@@ -41,11 +40,12 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
     setIsEdit(false);
   };
 
-  console.log(sheetKey, cellKey, "re-render");
+  // console.log(sheetKey, cellKey, "re-render");
 
   return (
     <td
-      data-ref={cellKey}
+      data-key={cellKey}
+      aria-label={indexToReference(cell.rowIndex, cell.columnIndex)}
       data-cell={JSON.stringify(cell)}
       contentEditable
       suppressContentEditableWarning
@@ -56,14 +56,19 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
       }}
       onFocus={() => setIsEdit(true)}
     >
-      {isEdit && isFormula(state.formula) ? state.formula : state.value}
+      {
+        isEdit && isFormula(state.formula) ? state.formula : state.value
+        // <>
+        //   {state.value}
+        //   <i>({cellKey})</i>
+        // </>
+      }
     </td>
   );
 };
 
 // export default CellBox;
-
-// Todo: If parent re-renders
+// If parent re-renders
 export default memo(CellBox, (prevProps, nextProps) => {
   return deepEqual(prevProps, nextProps);
 });

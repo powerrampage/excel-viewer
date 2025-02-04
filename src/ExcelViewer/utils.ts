@@ -1,6 +1,6 @@
 import { CSSProperties } from "react";
 import { Cell, Package } from "./types";
-import { DependencyValue, SpreadsheetStore } from "./store";
+import { CellCoord, CellKey, DependencyValue, SpreadsheetStore } from "./store";
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
@@ -35,7 +35,7 @@ export function spreadsheetMapper(data: Package[]) {
   const spreadsheet = data.reduce((prev, { listName, cells }) => {
     const cellMap = cells.reduce(
       (prev, { formula, value, rowIndex, columnIndex }) => {
-        const cellKey = indexToReference(rowIndex, columnIndex);
+        const cellKey = getCellKey({ row: rowIndex, col: columnIndex });
         prev[cellKey] = { formula, value };
         return prev;
       },
@@ -93,28 +93,35 @@ export function extractVariables(formula: string): string[] {
   return expanded;
 }
 
+function colToIndex(col: string): number {
+  let index = 0;
+  for (let i = 0; i < col.length; i++) {
+    index = index * 26 + (col.charCodeAt(i) - 64);
+  }
+  return index - 1;
+}
+
 export function expandRange(range: string): string[] {
   const match = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
   if (!match) return [range];
 
   const [, startCol, startRow, endCol, endRow] = match;
-  const startColCode = startCol.charCodeAt(0);
-  const endColCode = endCol.charCodeAt(0);
-
+  const startColIndex = colToIndex(startCol);
+  const endColIndex = colToIndex(endCol);
   const dependencies: string[] = [];
 
-  for (let col = startColCode; col <= endColCode; col++) {
-    for (let row = Number(startRow); row <= Number(endRow); row++) {
-      dependencies.push(String.fromCharCode(col) + row);
+  for (let col = startColIndex; col <= endColIndex; col++) {
+    for (let row = Number(startRow) - 1; row <= Number(endRow) - 1; row++) {
+      dependencies.push(`${row}-${col}`);
     }
   }
 
   return dependencies;
 }
 
-export function extractDependencies(formula: string, currentSheetKey: string): DependencyValue[] {
+export function extractDependencies(formula: string, currentSheetKey: string) {
   const regex = /([A-Za-z0-9_]+!)?\$?([A-Z]+\d+(:[A-Z]+\d+)*)/g;
-  const dependencies: DependencyValue[] = [];
+  const dependencies: { sheetKey: string; cellKey: string }[] = [];
 
   let match;
   while ((match = regex.exec(formula)) !== null) {
@@ -122,13 +129,27 @@ export function extractDependencies(formula: string, currentSheetKey: string): D
     const ref = match[2];
 
     if (ref.includes(":")) {
-      // (e.g., "A1:A3" → ["A1", "A2", "A3"])
-      const rangeRefs = expandRange(ref);
-      dependencies.push(...rangeRefs.map((cellKey) => ({ sheetKey, cellKey })));
+      dependencies.push(
+        ...expandRange(ref).map((cellKey) => ({ sheetKey, cellKey }))
+      );
     } else {
-      dependencies.push({ sheetKey, cellKey: ref });
+      const col = ref.match(/[A-Z]+/)![0];
+      const row = ref.match(/\d+/)![0];
+      dependencies.push({
+        sheetKey,
+        cellKey: `${Number(row) - 1}-${colToIndex(col)}`,
+      });
     }
   }
 
   return dependencies;
+}
+
+export function parseCellKey(key: CellKey | (string & {})): CellCoord {
+  const [row, col] = key.split("-").map(Number);
+  return { row, col };
+}
+
+export function getCellKey(coordinate: CellCoord): CellKey {
+  return `${coordinate.row}-${coordinate.col}`;
 }
