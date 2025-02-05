@@ -28,7 +28,7 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
   };
 
   const onHandleCell = (value: string) => {
-    if (!isFormula(value)) {
+    if (!isFormula(value) && state.value !== value) {
       setCellValue(sheetKey, cellKey, { value, formula: null });
     }
     setIsEdit(false);
