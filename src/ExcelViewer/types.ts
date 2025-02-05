@@ -15,10 +15,23 @@ export interface Cell {
   fontSize: number;
   backgroundColor: string | null;
   textColor: string;
-  border: ("noBorder" | "allSides") | ({} & string);
   formula?: string | null;
   width: number;
   height: number;
   bold: boolean;
   italic: boolean;
+  borderBottom: string | null;
+  borderTop: string | null;
+  borderLeft: string | null;
+  borderRight: string | null;
+  textAlign: string;
 }
+
+export type BorderType =
+  | "DASHED"
+  | "DOTTED"
+  | "DOUBLE"
+  | "HAIR"
+  | "THICK"
+  | "MEDIUM"
+  | "THIN";

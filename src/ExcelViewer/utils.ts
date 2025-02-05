@@ -1,6 +1,21 @@
 import { CSSProperties } from "react";
-import { Cell, Package } from "./types";
+import { BorderType, Cell, Package } from "./types";
 import { CellCoord, CellKey, SpreadsheetStore } from "./store";
+
+export function parseBorderStyle(borderValue: string | null) {
+  if (!borderValue) return "none";
+  const [color, type] = borderValue.split(" - ");
+  const thicknessMap: Record<BorderType, string> = {
+    THIN: "1px solid",
+    MEDIUM: "2px solid",
+    THICK: "3px solid",
+    DASHED: "2px dashed",
+    DOTTED: "2px dotted",
+    DOUBLE: "3px double",
+    HAIR: "1px solid",
+  };
+  return `${thicknessMap[type as BorderType] ?? "1px solid"} ${color}`;
+}
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
@@ -13,12 +28,11 @@ export function getCellStyles(cell: Cell): CSSProperties {
     fontFamily: cell.fontName || "Arial, sans-serif",
     color: cell.textColor || "#000",
     backgroundColor: cell.backgroundColor || "transparent",
-    border:
-      cell.border === "allSides"
-        ? `1px solid #000`
-        : cell.border === "noBorder"
-        ? "none"
-        : "",
+    textAlign: (cell?.textAlign || "left") as CSSProperties["textAlign"],
+    borderBottom: parseBorderStyle(cell.borderBottom),
+    borderTop: parseBorderStyle(cell.borderTop),
+    borderLeft: parseBorderStyle(cell.borderLeft),
+    borderRight: parseBorderStyle(cell.borderRight),
   };
 }
 
