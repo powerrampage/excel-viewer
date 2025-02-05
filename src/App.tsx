@@ -1,4 +1,3 @@
-import "./App.css";
 import ExcelViewer from "./ExcelViewer/ExcelViewer";
 
 function App() {

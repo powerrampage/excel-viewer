@@ -1,11 +1,10 @@
 import { CSSProperties } from "react";
 import { Cell, Package } from "./types";
-import { CellCoord, CellKey, DependencyValue, SpreadsheetStore } from "./store";
+import { CellCoord, CellKey, SpreadsheetStore } from "./store";
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
     whiteSpace: "nowrap",
-
     width: cell.width || "auto",
     height: cell.height || "auto",
     fontSize: cell.fontSize || 14,
@@ -48,49 +47,28 @@ export function spreadsheetMapper(data: Package[]) {
   return spreadsheet;
 }
 
-export function indexToReference(rowIndex: number, colIndex: number): string {
-  return String.fromCharCode(65 + colIndex) + (rowIndex + 1);
+export function getCellAddress(rowIndex: number, colIndex: number): string {
+  if (
+    !Number.isInteger(rowIndex) ||
+    !Number.isInteger(colIndex) ||
+    rowIndex < 0 ||
+    colIndex < 0
+  ) {
+    throw new Error("Invalid row or column index");
+  }
+  let colName = "";
+  let col = colIndex + 1;
+  while (col > 0) {
+    col--;
+    colName = String.fromCharCode(65 + (col % 26)) + colName;
+    col = Math.floor(col / 26);
+  }
+  return colName + (rowIndex + 1);
 }
 
 export function isFormula(value: string | null | undefined): boolean {
   if (!value) return false;
   return value.startsWith("=");
-}
-
-export function parseInt(value: string | null | undefined) {
-  if (!isFinite(value as any) || typeof value !== "number") {
-    return Number(value);
-  }
-  return value;
-}
-
-export function extractVariables(formula: string): string[] {
-  const regex = /[A-Z]+\d+(:[A-Z]+\d+)?/g;
-  const matches = formula.match(regex) || [];
-
-  let expanded: string[] = [];
-
-  matches.forEach((match) => {
-    if (match.includes(":")) {
-      const [start, end] = match.split(":");
-      const [startCol, startRow] = [
-        start.replace(/\d+/g, ""),
-        Number(start.replace(/\D+/g, "")),
-      ];
-      const [_endCol, endRow] = [
-        end.replace(/\d+/g, ""),
-        Number(end.replace(/\D+/g, "")),
-      ];
-
-      for (let i = startRow; i <= endRow; i++) {
-        expanded.push(`${startCol}${i}`);
-      }
-    } else {
-      expanded.push(match);
-    }
-  });
-
-  return expanded;
 }
 
 function colToIndex(col: string): number {
@@ -145,7 +123,7 @@ export function extractDependencies(formula: string, currentSheetKey: string) {
   return dependencies;
 }
 
-export function parseCellKey(key: CellKey | (string & {})): CellCoord {
+export function parseCellKey(key: CellKey): CellCoord {
   const [row, col] = key.split("-").map(Number);
   return { row, col };
 }

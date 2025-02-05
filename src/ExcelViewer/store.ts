@@ -4,7 +4,7 @@ import { Cell } from "./types";
 import { hfService } from "./lib/hyperformula";
 import {
   extractDependencies,
-  indexToReference,
+  getCellAddress,
   isFormula,
   parseCellKey,
 } from "./utils";
@@ -23,11 +23,6 @@ export interface SpreadsheetStoreState {
 
 export interface SpreadsheetStoreActions {
   setCellValue: (
-    sheetKey: SheetKey,
-    cellKey: CellKey,
-    cellValue: CellValue
-  ) => void;
-  setCellFormula: (
     sheetKey: SheetKey,
     cellKey: CellKey,
     cellValue: CellValue
@@ -64,7 +59,7 @@ export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
           console.log(
             "Updated dependency:",
             sheetKey,
-            indexToReference(
+            getCellAddress(
               parseCellKey(cellKey).row,
               parseCellKey(cellKey).col
             ),
@@ -74,20 +69,6 @@ export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
         });
 
         return { cells };
-      });
-    },
-    // Todo: fix cell formula
-    setCellFormula(sheetKey, cellKey, cellValue) {
-      set((state) => {
-        hfService.setCellContents(sheetKey, cellKey, cellValue.formula);
-        const { row, col } = parseCellKey(cellKey);
-
-        const sheetId = hfService.getSheetId(sheetKey);
-        console.log("asda", hf.getCellValue({ sheet: sheetId, row, col }));
-
-        const updatedCells = structuredClone(state.cells);
-
-        return { cells: updatedCells };
       });
     },
     setSpreadsheet(cells) {

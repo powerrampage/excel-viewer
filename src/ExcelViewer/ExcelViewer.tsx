@@ -1,37 +1,43 @@
-import React, { useEffect, useTransition } from "react";
+import { FC, useEffect } from "react";
 import demoJson from "./demo-data.json";
 import { getCellKey, groupCells, spreadsheetMapper } from "./utils";
 import { Root } from "./types";
 import CellBox from "./CellBox";
 import { useSpreadsheetStore } from "./store";
 
-const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData: data }) => {
-  const [isPending, startTransition] = useTransition();
-  const setSpreadsheet = useSpreadsheetStore((state) => state.setSpreadsheet);
-  const setDependencies = useSpreadsheetStore((state) => state.setDependencies);
-  const setCurrentSheetKey = useSpreadsheetStore(
-    (state) => state.setCurrentSheetKey
-  );
+const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
+  const { setSpreadsheet, setDependencies, setCurrentSheetKey } =
+    useSpreadsheetStore((state) => ({
+      setSpreadsheet: state.setSpreadsheet,
+      setDependencies: state.setDependencies,
+      setCurrentSheetKey: state.setCurrentSheetKey,
+    }));
   const currentSheetKey = useSpreadsheetStore((state) => state.currentSheetKey);
 
   const state = useSpreadsheetStore((state) => state);
   console.log("state:", state);
 
   useEffect(() => {
-    startTransition(() => {
-      setCurrentSheetKey(data.packages[0].listName);
-    });
-  }, [data, setCurrentSheetKey]);
+    setCurrentSheetKey(data.packages[0].listName);
+    const spreadsheet = spreadsheetMapper(data.packages);
+    setSpreadsheet(spreadsheet);
+    setDependencies(spreadsheet);
+  }, [data, setCurrentSheetKey, setDependencies, setSpreadsheet]);
 
-  useEffect(() => {
-    startTransition(() => {
-      const spreadsheet = spreadsheetMapper(data.packages);
-      setSpreadsheet(spreadsheet);
-      setDependencies(spreadsheet);
-    });
-  }, [data, setSpreadsheet, setDependencies]);
-
-  if (!currentSheetKey || isPending) return <h1>Loading....</h1>;
+  if (!currentSheetKey) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <h1>Loading....</h1>
+      </div>
+    );
+  }
 
   const currentSheet = data.packages.find(
     ({ listName }) => listName === currentSheetKey
@@ -40,7 +46,7 @@ const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData: data }) => {
   return (
     <div>
       <select
-        style={{ width: 500, height: 50 }}
+        style={{ width: 200, height: 30 }}
         onChange={(event) => {
           const sheetKey = event.target.value;
           console.log({ event, sheetKey });
@@ -61,7 +67,7 @@ const ExcelViewer: React.FC<{ jsonData: Root }> = ({ jsonData: data }) => {
         <table
           style={{
             borderCollapse: "collapse",
-            // tableLayout: "fixed",
+            tableLayout: "fixed",
             width: "100%",
           }}
         >
