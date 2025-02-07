@@ -25,6 +25,8 @@ export interface Cell {
   borderLeft: string | null;
   borderRight: string | null;
   textAlign: string;
+  columnSpan: number;
+  rowSpan: number;
 }
 
 export type BorderType =
