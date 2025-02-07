@@ -28,7 +28,7 @@ export function getCellStyles(cell: Cell): CSSProperties {
     fontFamily: cell.fontName || "Arial, sans-serif",
     color: cell.textColor || "#000",
     backgroundColor: cell.backgroundColor || "transparent",
-    textAlign: (cell?.textAlign || "left") as CSSProperties["textAlign"],
+    textAlign: cell?.textAlign as CSSProperties["textAlign"],
     borderBottom: parseBorderStyle(cell.borderBottom),
     borderTop: parseBorderStyle(cell.borderTop),
     borderLeft: parseBorderStyle(cell.borderLeft),

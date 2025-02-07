@@ -42,6 +42,8 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
       contentEditable
       suppressContentEditableWarning
       style={getCellStyles(cell)}
+      colSpan={cell.columnSpan || 1}
+      rowSpan={cell.rowSpan || 1}
       onBlur={(event) => {
         const value = event.currentTarget.textContent;
         value && onHandleCell(value);
