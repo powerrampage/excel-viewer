@@ -6,6 +6,7 @@
 
 * {
   margin: 0;
+  padding: 0;
 }
 
 body {
@@ -15,46 +16,16 @@ body {
     "Helvetica Neue", Arial, sans-serif;
 }
 
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  overflow-wrap: break-word;
-}
-
-p {
-  text-wrap: pretty;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-wrap: balance;
-}
-
 #root,
 #__next {
-  isolation: isolate;
   padding: 10px;
+}
+
+td::selection {
+  background: rgba(128, 128, 128, 0.5);
+  color: inherit;
+}
+
+td:focus-visible {
+  outline: rgba(0, 128, 0, 1) solid 1px;
 }

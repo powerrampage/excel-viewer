@@ -19,6 +19,7 @@ export function parseBorderStyle(borderValue: string | null) {
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
+    lineHeight: [undefined, null, ""].includes(cell.value) ? 0 : undefined,
     whiteSpace: "nowrap",
     width: cell.width || "auto",
     height: cell.height || "auto",
@@ -58,6 +59,7 @@ export function spreadsheetMapper(data: Package[]) {
 
     return prev;
   }, {} as SpreadsheetStore["cells"]);
+
   return spreadsheet;
 }
 

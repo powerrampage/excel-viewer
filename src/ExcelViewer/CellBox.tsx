@@ -1,4 +1,4 @@
-import { FC, memo, useState } from "react";
+import { FC, memo, useState, Fragment } from "react";
 import { Cell } from "./types";
 import { getCellStyles, getCellAddress, isFormula } from "./utils";
 import { CellKey, CellValue, SheetKey, useSpreadsheetStore } from "./store";
@@ -50,7 +50,24 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
       }}
       onFocus={() => setIsEdit(true)}
     >
-      {isEdit && isFormula(state.formula) ? state.formula : state.value}
+      {(() => {
+        if (isEdit && isFormula(state.formula)) {
+          return state.formula;
+        }
+
+        if (state.value?.includes("\n")) {
+          const letters = state.value?.split("\n");
+
+          return letters.map((line, index) => (
+            <Fragment key={index}>
+              {line}
+              <br />
+            </Fragment>
+          ));
+        } else {
+          return state.value;
+        }
+      })()}
     </td>
   );
 };
