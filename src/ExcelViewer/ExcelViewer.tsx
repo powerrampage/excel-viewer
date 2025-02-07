@@ -77,8 +77,8 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
                 <tr key={rowIndex}>
                   {row.map((cell, colIndex) => {
                     const cellReference = getCellKey({
-                      row: rowIndex,
-                      col: colIndex,
+                      row: cell.rowIndex,
+                      col: cell.columnIndex,
                     });
                     return (
                       <CellBox
