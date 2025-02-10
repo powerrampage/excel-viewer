@@ -43,13 +43,14 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
     ({ listName }) => listName === currentSheetKey
   )!;
 
+  const groupedCells = groupCells(currentSheet.cells);
+
   return (
     <div>
       <select
         style={{ width: 200, height: 30 }}
         onChange={(event) => {
           const sheetKey = event.target.value;
-          console.log({ event, sheetKey });
           setCurrentSheetKey(sheetKey);
         }}
       >
@@ -62,8 +63,8 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
         })}
       </select>
 
-      <div style={{ marginBottom: "20px" }}>
-        <h3>{currentSheet.listName}</h3>
+      <div>
+        <h3 style={{ paddingBottom: 30 }}>{currentSheet.listName}</h3>
         <table
           style={{
             borderCollapse: "collapse",
@@ -71,8 +72,14 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
             width: "100%",
           }}
         >
+          <thead>
+            {groupedCells[0].map(({ width }) => {
+              return <th style={{ width: width }} />;
+            })}
+          </thead>
+
           <tbody key={currentSheet.listName}>
-            {groupCells(currentSheet.cells).map((row, rowIndex) => {
+            {groupedCells.map((row, rowIndex) => {
               return (
                 <tr key={rowIndex}>
                   {row.map((cell, colIndex) => {
