@@ -27,6 +27,7 @@ export interface Cell {
   textAlign: string;
   columnSpan: number;
   rowSpan: number;
+  editable: boolean;
 }
 
 export type BorderType =

@@ -39,7 +39,7 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
       data-key={cellKey}
       aria-label={getCellAddress(cell.rowIndex, cell.columnIndex)}
       data-cell={JSON.stringify(cell)}
-      contentEditable
+      contentEditable={cell.editable}
       suppressContentEditableWarning
       style={getCellStyles(cell)}
       colSpan={cell.columnSpan || 1}
