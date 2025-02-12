@@ -2,12 +2,7 @@ import _ from "lodash";
 import { createWithEqualityFn as create } from "zustand/traditional";
 import { Cell } from "./types";
 import { hfService } from "./lib/hyperformula";
-import {
-  extractDependencies,
-  getCellAddress,
-  isFormula,
-  parseCellKey,
-} from "./utils";
+import { extractDependencies, isFormula } from "./utils";
 
 export type SheetKey = string;
 export type CellKey = string; // "4-5" (row: 4, col: 5)
@@ -50,23 +45,24 @@ export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
 
         hfService.setCellContents(sheetKey, cellKey, cellValue.value);
 
-        const dependencies = _.get(state.dependencies, [sheetKey, cellKey], []);
-        dependencies.forEach(({ sheetKey, cellKey }) => {
-          const formula = _.get(cells, [sheetKey, cellKey, "formula"])!;
-          const value = hfService.calcFormula(formula, sheetKey);
-          _.set(cells, [sheetKey, cellKey, "value"], value);
+        function reCalcDependencies(dependencies: DependencyValue[]) {
+          dependencies.forEach(({ sheetKey, cellKey }) => {
+            const formula = _.get(cells, [sheetKey, cellKey, "formula"])!;
+            const value = hfService.calcFormula(formula, sheetKey);
+            _.set(cells, [sheetKey, cellKey, "value"], value);
+            hfService.setCellContents(sheetKey, cellKey, String(value));
 
-          console.log(
-            "Updated dependency:",
-            sheetKey,
-            getCellAddress(
-              parseCellKey(cellKey).row,
-              parseCellKey(cellKey).col
-            ),
-            cellKey,
-            value
-          );
-        });
+            const _dependencies = _.get(
+              state.dependencies,
+              [sheetKey, cellKey],
+              []
+            );
+            reCalcDependencies(_dependencies);
+          });
+        }
+
+        const dependencies = _.get(state.dependencies, [sheetKey, cellKey], []);
+        reCalcDependencies(dependencies);
 
         return { cells };
       });
@@ -87,13 +83,12 @@ export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
     setDependencies(spreadsheet) {
       set(() => {
         const dependencies: SpreadsheetStore["dependencies"] = {};
-        const currentSheetKey = get().currentSheetKey!;
 
         Object.entries(spreadsheet).forEach(([sheetKey, cells]) => {
           Object.entries(cells).forEach(([cellKey, cellValue]) => {
             if (!isFormula(cellValue.formula)) return;
 
-            extractDependencies(cellValue.formula!, currentSheetKey).forEach(
+            extractDependencies(cellValue.formula!, sheetKey).forEach(
               (dependency) => {
                 _.update(
                   dependencies,
