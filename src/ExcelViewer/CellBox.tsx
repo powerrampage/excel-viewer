@@ -1,9 +1,8 @@
-import { FC, memo, useState, Fragment } from "react";
+import { FC, memo, useState } from "react";
 import { Cell } from "./types";
 import { getCellStyles, getCellAddress, isFormula } from "./utils";
 import { CellKey, CellValue, SheetKey, useSpreadsheetStore } from "./store";
 import deepEqual from "deep-equal";
-import { isString } from "lodash";
 
 export interface CellBoxProps {
   cell: Cell;
@@ -55,19 +54,7 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
         if (isEdit && isFormula(state.formula)) {
           return state.formula;
         }
-
-        if (isString(state.value) && state.value?.includes("\n")) {
-          const letters = state.value?.split("\n");
-
-          return letters.map((line, index) => (
-            <Fragment key={index}>
-              {line}
-              <br />
-            </Fragment>
-          ));
-        } else {
-          return state.value;
-        }
+        return state.value;
       })()}
     </td>
   );

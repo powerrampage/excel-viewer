@@ -48,6 +48,7 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
   return (
     <div>
       <select
+        value={currentSheetKey}
         style={{ width: 200, height: 30 }}
         onChange={(event) => {
           const sheetKey = event.target.value;
