@@ -43,7 +43,7 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
     ({ listName }) => listName === currentSheetKey
   )!;
 
-  const groupedCells = groupCells(currentSheet.cells);
+  const groupedCells = groupCells(currentSheet.cells).filter(Boolean);
 
   return (
     <div>
