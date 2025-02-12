@@ -20,7 +20,7 @@ export function parseBorderStyle(borderValue: string | null) {
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
     lineHeight: [undefined, null, ""].includes(cell.value) ? 0 : undefined,
-    whiteSpace: "nowrap",
+    whiteSpace: cell.textWrapping ? "wrap" : "nowrap",
     width: cell.width || "auto",
     height: cell.height || "auto",
     fontSize: cell.fontSize || 14,
@@ -120,7 +120,7 @@ export function extractDependencies(formula: string, currentSheetKey: string) {
   let match;
   while ((match = regex.exec(formula)) !== null) {
     const sheetKey = match[1] ? match[1].slice(0, -1) : currentSheetKey;
-    const ref = match[2];
+    const ref = match[2].replace(/\$/g, ""); // Remove '$' from absolute references
 
     if (ref.includes(":")) {
       dependencies.push(
