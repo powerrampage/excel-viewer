@@ -73,8 +73,8 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
           }}
         >
           <thead>
-            {groupedCells[0].map(({ width }) => {
-              return <th style={{ width: width }} />;
+            {groupedCells[0].map(({ width }, index) => {
+              return <tr key={index} style={{ width: width }}></tr>;
             })}
           </thead>
 
