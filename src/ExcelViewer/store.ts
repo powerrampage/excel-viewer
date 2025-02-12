@@ -29,7 +29,7 @@ export interface SpreadsheetStoreActions {
 
 export type SpreadsheetStore = SpreadsheetStoreState & SpreadsheetStoreActions;
 
-export const useSpreadsheetStore = create<SpreadsheetStore>()((set, get) => {
+export const useSpreadsheetStore = create<SpreadsheetStore>()((set, _get) => {
   return {
     currentSheetKey: null,
     cells: {},
