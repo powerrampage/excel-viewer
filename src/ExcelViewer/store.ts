@@ -49,8 +49,13 @@ export const useSpreadsheetStore = create<SpreadsheetStore>()((set, _get) => {
           dependencies.forEach(({ sheetKey, cellKey }) => {
             const formula = _.get(cells, [sheetKey, cellKey, "formula"])!;
             const value = hfService.calcFormula(formula, sheetKey);
-            _.set(cells, [sheetKey, cellKey, "value"], value);
-            hfService.setCellContents(sheetKey, cellKey, String(value));
+
+            const resolvedValue = _.isObject(value)
+              ? _.get(value, "value", "")
+              : value;
+
+            _.set(cells, [sheetKey, cellKey, "value"], resolvedValue);
+            hfService.setCellContents(sheetKey, cellKey, resolvedValue);
 
             const _dependencies = _.get(
               state.dependencies,
