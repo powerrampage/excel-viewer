@@ -1,9 +1,13 @@
 import { HyperFormula, RawCellContent } from "hyperformula";
+import ruRU from "hyperformula/i18n/languages/ruRU";
 import { CellKey, SheetKey } from "../store";
 import { parseCellKey } from "../utils";
 
+HyperFormula.registerLanguage("ruRU", ruRU);
+
 globalThis.hf = HyperFormula.buildEmpty({
   licenseKey: "gpl-v3",
+  language: "ruRU",
 });
 
 export const hfService = {
