@@ -19,8 +19,8 @@ export function parseBorderStyle(borderValue: string | null) {
 
 export function getCellStyles(cell: Cell): CSSProperties {
   return {
-    lineHeight: [undefined, null, ""].includes(cell.value) ? 0 : undefined,
-    whiteSpace: cell.textWrapping ? "wrap" : "nowrap",
+    padding: 2,
+    whiteSpace: cell.textWrapping ? "pre-wrap" : "nowrap",
     width: cell.width || "auto",
     height: cell.height || "auto",
     fontSize: cell.fontSize || 14,

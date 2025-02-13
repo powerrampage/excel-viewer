@@ -49,7 +49,7 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
     <div>
       <select
         value={currentSheetKey}
-        style={{ width: 200, height: 30 }}
+        style={{ width: 200, height: 30, marginBottom: 30 }}
         onChange={(event) => {
           const sheetKey = event.target.value;
           setCurrentSheetKey(sheetKey);
@@ -65,7 +65,6 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
       </select>
 
       <div>
-        <h3 style={{ paddingBottom: 30 }}>{currentSheet.listName}</h3>
         <table
           style={{
             borderCollapse: "collapse",
@@ -74,9 +73,11 @@ const ExcelViewer: FC<{ jsonData: Root }> = ({ jsonData: data }) => {
           }}
         >
           <thead>
-            {groupedCells[0].map(({ width }, index) => {
-              return <tr key={index} style={{ width: width }}></tr>;
-            })}
+            <tr>
+              {groupedCells[0].map(({ width }, index) => {
+                return <td key={index} style={{ width }}></td>;
+              })}
+            </tr>
           </thead>
 
           <tbody key={currentSheet.listName}>
