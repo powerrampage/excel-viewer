@@ -29,7 +29,7 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
 
   const onHandleCell = (value: string) => {
     if (!isFormula(value) && state.value !== value) {
-      setCellValue(sheetKey, cellKey, { value, formula: null });
+      setCellValue(sheetKey, cellKey, { value, formula: state.formula });
     }
     setIsEdit(false);
   };
@@ -45,8 +45,8 @@ const CellBox: FC<CellBoxProps> = ({ cell, cellKey, sheetKey }) => {
       colSpan={cell.columnSpan || 1}
       rowSpan={cell.rowSpan || 1}
       onBlur={(event) => {
-        const value = event.currentTarget.textContent;
-        value && onHandleCell(value);
+        const value = event.currentTarget.textContent ?? "";
+        onHandleCell(value);
       }}
       onFocus={() => setIsEdit(true)}
     >
