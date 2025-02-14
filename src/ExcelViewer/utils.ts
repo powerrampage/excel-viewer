@@ -22,6 +22,8 @@ export function getCellStyles(cell: Cell): CSSProperties {
     padding: 2,
     whiteSpace: cell.textWrapping ? "pre-wrap" : "nowrap",
     width: cell.width || "auto",
+    minWidth: cell.width || "auto",
+    maxWidth: cell.width || "auto",
     height: cell.height || "auto",
     fontSize: cell.fontSize || 14,
     fontWeight: cell.bold ? "bold" : "normal",
