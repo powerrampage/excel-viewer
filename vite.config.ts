@@ -7,10 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: "remote_app",
+      name: "WEFO_APP",
       filename: "remoteEntry.js",
+      library: { type: "var", name: "WEFO_APP" },
       exposes: {
-        "./App": "./src/App",
+        "./WEFO_APP": "./src/App",
       },
       shared: {
         react: {
