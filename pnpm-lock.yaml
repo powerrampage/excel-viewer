@@ -37,6 +37,9 @@ devDependencies:
   '@eslint/js':
     specifier: ^9.17.0
     version: 9.19.0
+  '@originjs/vite-plugin-federation':
+    specifier: ^1.3.9
+    version: 1.3.9
   '@types/deep-equal':
     specifier: ^1.0.4
     version: 1.0.4
@@ -610,6 +613,14 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.18.0
+    dev: true
+
+  /@originjs/vite-plugin-federation@1.3.9:
+    resolution: {integrity: sha512-2rm5ZD5L9I0geLOaaYwpXT6V6E3O8vDAVCTDHOmJ+QnmpnHctK/iToGJX1ZYFEnR/1s0w7yF7kDW4Ksjpxfa1w==}
+    engines: {node: '>=14.0.0', pnpm: '>=7.0.1'}
+    dependencies:
+      estree-walker: 3.0.3
+      magic-string: 0.27.0
     dev: true
 
   /@rollup/rollup-android-arm-eabi@4.32.0:
@@ -1465,7 +1476,6 @@ packages:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
     dependencies:
       '@types/estree': 1.0.6
-    dev: false
 
   /esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
@@ -1922,6 +1932,13 @@ packages:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
     dependencies:
       yallist: 3.1.1
+    dev: true
+
+  /magic-string@0.27.0:
+    resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.0
     dev: true
 
   /magic-string@0.30.17:
